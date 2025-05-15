@@ -5,7 +5,7 @@ import Image from "next/image"
 import { motion, useInView } from "motion/react"
 import { fontVariants } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
-import { Download, ArrowRight, Printer } from "lucide-react"
+import { ArrowRight, Printer } from "lucide-react"
 
 export default function BrochureSection() {
 	const sectionRef = useRef(null)

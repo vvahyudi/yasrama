@@ -5,12 +5,19 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { fontVariants } from "@/lib/fonts"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, LucideIcon } from "lucide-react"
+
+interface Institution {
+	title: string
+	description: string
+	icon: LucideIcon
+	href: string
+}
 
 export default function InstitutionCard({
 	institution,
 }: {
-	institution: { title: string; description: string; icon: any; href: string }
+	institution: Institution
 }) {
 	const { title, description, icon: Icon, href } = institution
 

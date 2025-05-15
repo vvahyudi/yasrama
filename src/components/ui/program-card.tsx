@@ -3,13 +3,19 @@
 import { motion } from "motion/react"
 import { fontVariants } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
+import { LucideIcon } from "lucide-react"
+
+interface Program {
+	title: string
+	description: string
+}
 
 export default function ProgramCard({
 	program,
 	icon: Icon,
 }: {
-	program: any
-	icon: any
+	program: Program
+	icon: LucideIcon
 }) {
 	const { title, description } = program
 

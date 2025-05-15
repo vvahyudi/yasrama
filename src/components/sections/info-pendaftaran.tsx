@@ -5,7 +5,9 @@ import Image from "next/image"
 import { motion, useInView } from "motion/react"
 import { fontVariants } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
-import { MessageCircle, FileDown, Calendar, Phone, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Calendar, GraduationCap, Users } from "lucide-react"
+import { MessageCircle, FileDown, MapPin } from "lucide-react"
 
 export default function EnrollmentInfoSection({ lembaga = "RAISNU" }) {
 	const sectionRef = useRef(null)

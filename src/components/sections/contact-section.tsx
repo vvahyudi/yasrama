@@ -10,6 +10,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Phone, MapPin, Mail, Send, Goal, MessageSquare } from "lucide-react"
 // import { useToast } from "@/components/ui/use-toast"
 
+interface FormEvent {
+	target: {
+		id: string
+		value: string
+	}
+}
+
 export default function ContactSection() {
 	const sectionRef = useRef(null)
 	const isInView = useInView(sectionRef, { once: true, margin: "-100px" })
@@ -22,9 +29,9 @@ export default function ContactSection() {
 		message: "",
 	})
 
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isSubmitting] = useState(false)
 
-	const handleChange = (e: { target: { id: any; value: any } }) => {
+	const handleChange = (e: FormEvent) => {
 		setFormData({ ...formData, [e.target.id]: e.target.value })
 	}
 

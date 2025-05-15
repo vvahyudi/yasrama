@@ -18,6 +18,7 @@ import {
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 
 interface Activity {
 	id: number
@@ -134,21 +135,6 @@ export default function KegiatanPage() {
 			location: "Desa Pangarangan, Sumenep",
 		},
 	]
-
-	const getCategoryIcon = (category: string) => {
-		switch (category) {
-			case "pendidikan":
-				return <GraduationCap className="h-5 w-5" />
-			case "sosial":
-				return <HeartHandshake className="h-5 w-5" />
-			case "keagamaan":
-				return <Mosque className="h-5 w-5" />
-			case "lingkungan":
-				return <Leaf className="h-5 w-5" />
-			default:
-				return <BookOpen className="h-5 w-5" />
-		}
-	}
 
 	const getCategoryColor = (category: string) => {
 		switch (category) {
@@ -302,9 +288,11 @@ export default function KegiatanPage() {
 								whileHover={{ y: -8, transition: { duration: 0.3 } }}
 							>
 								<div className="relative h-48 overflow-hidden">
-									<img
+									<Image
 										src={activity.image || "/placeholder.svg"}
 										alt={activity.title}
+										width={600}
+										height={400}
 										className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
 									/>
 									<div className="absolute top-4 right-4">

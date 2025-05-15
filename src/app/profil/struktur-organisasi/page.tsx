@@ -151,7 +151,7 @@ export default function StrukturOrganisasiPage(): JSX.Element {
 				<div className="space-y-16">
 					{/* Organizational Structure Cards */}
 					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-						{sections.map((section, index) => (
+						{sections.map((section) => (
 							<motion.div
 								key={section.title}
 								variants={cardVariants}

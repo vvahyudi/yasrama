@@ -1,14 +1,12 @@
 "use client"
 
-import {
-	createContext,
-	useState,
-	useContext,
-	ReactNode,
-	useEffect,
-} from "react"
+import { createContext, useState, useContext, ReactNode } from "react"
 
 const TOAST_REMOVE_DELAY = 5000
+
+interface ToastCustomProps {
+	[key: string]: unknown
+}
 
 type Toast = {
 	id: string
@@ -16,8 +14,7 @@ type Toast = {
 	description?: string
 	duration?: number
 	visible?: boolean
-	[key: string]: any // for any custom props
-}
+} & ToastCustomProps
 
 type ToastInput = Omit<Toast, "id" | "visible"> & { id?: string }
 
@@ -98,13 +95,16 @@ export function useToast(): UseToastReturn {
 	return {
 		toast: (props: ToastInput) => {
 			const id = addToast(props)
+			const hideDelay =
+				typeof props.duration === "number" ? props.duration : TOAST_REMOVE_DELAY
+			const removeDelay = 300
 
-			setTimeout(() => {
+			window.setTimeout(() => {
 				dismissToast(id)
-				setTimeout(() => {
+				window.setTimeout(() => {
 					removeToast(id)
-				}, 300)
-			}, props.duration || TOAST_REMOVE_DELAY)
+				}, removeDelay)
+			}, hideDelay)
 
 			return {
 				id,

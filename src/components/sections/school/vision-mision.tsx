@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 
 // Mission statements data
 const missionData = [
-	"Menanamkan nilai-nilai mulia yang terkandung di dalam Al-Qur'an.",
-	"Mengamalkan ajaran Ahlus Sunnah wal Jama'ah An-Nahdliyah (ASWAJA NU).",
+	"Menanamkan nilai-nilai mulia yang terkandung di dalam Al-Qur&apos;an.",
+	"Mengamalkan ajaran Ahlus Sunnah wal Jama&apos;ah An-Nahdliyah (ASWAJA NU).",
 	"Membekali peserta didik dengan teknologi melalui pembelajaran IT.",
 	"Menciptakan suasana pembelajaran yang aktif, kreatif, inovatif, kolaboratif dan menyenangkan.",
 	"Mencetak generasi yang berkualitas, kompetitif dan unggul.",
@@ -76,8 +76,8 @@ export default function VisionMission() {
 								fontVariants.base,
 							)}
 						>
-							"Mencetak generasi Qur'ani, cerdas, berprestasi dan berkarakter
-							ASWAJA."
+							&quot;Mencetak generasi Qur&apos;ani, cerdas, berprestasi dan
+							berkarakter ASWAJA.&quot;
 						</motion.p>
 					</motion.div>
 

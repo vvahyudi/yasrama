@@ -5,8 +5,8 @@ import Image from "next/image"
 import { motion, useInView } from "motion/react"
 import { fontVariants } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Calendar, GraduationCap, Users } from "lucide-react"
+
+import { Calendar } from "lucide-react"
 import { MessageCircle, FileDown, MapPin } from "lucide-react"
 
 export default function EnrollmentInfoSection({ lembaga = "RAISNU" }) {
@@ -176,7 +176,7 @@ export default function EnrollmentInfoSection({ lembaga = "RAISNU" }) {
 								Mohon berkenan untuk menyebarkan informasi ini kepada yang
 								memerlukan. Atas kerjasamanya kami haturkan terima kasih.
 								<strong className="italic ml-1">
-									Jazakumullah khairal jaza'
+									Jazakumullah khairal jaza&apos;
 								</strong>
 							</p>
 

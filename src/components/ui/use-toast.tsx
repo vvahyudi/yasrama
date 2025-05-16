@@ -116,8 +116,6 @@ export function useToast(): UseToastReturn {
 }
 
 export const Toaster = () => {
-	const { toasts } = useContext(ToastContext)
-
 	// Replace this return with actual JSX when needed
 	return null
 }

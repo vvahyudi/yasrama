@@ -4,7 +4,6 @@ import { fontVariants } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
 import { motion } from "motion/react"
 import {
-	BookOpen,
 	HeartHandshake,
 	ChurchIcon as Mosque,
 	Calendar,

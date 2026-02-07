@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import { noto, notoArabic } from "@/lib/fonts";
+import { QueryProvider } from "@/components/ui/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 
@@ -53,8 +54,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
 			suppressHydrationWarning
 		>
 			<body className={noto.className}>
-				{children}
-				<Toaster />
+				<QueryProvider>
+					{children}
+					<Toaster />
+				</QueryProvider>
 			</body>
 		</html>
 	);

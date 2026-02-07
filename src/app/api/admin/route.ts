@@ -3,11 +3,12 @@ import { getUser } from "@/lib/session";
 import { getCloudinaryConfig, signCloudinaryParams } from "@/lib/cloudinary";
 
 type ContentType = "news" | "activity";
+type GenerateTarget = "description" | "content" | "both";
+type GenerateTone = "FORMAL" | "PROMOTIONAL" | "NARRATIVE";
 
 interface GenerateContentResult {
-	title: string;
-	description: string;
-	content: string;
+	description?: string;
+	content?: string;
 }
 
 function extractJsonObject(text: string): GenerateContentResult | null {
@@ -19,14 +20,14 @@ function extractJsonObject(text: string): GenerateContentResult | null {
 
 	try {
 		const parsed = JSON.parse(text.slice(start, end + 1));
-		if (
-			typeof parsed?.title === "string" &&
-			typeof parsed?.description === "string" &&
-			typeof parsed?.content === "string"
-		) {
-			return parsed;
+		const result: GenerateContentResult = {};
+		if (typeof parsed?.description === "string") {
+			result.description = parsed.description;
 		}
-		return null;
+		if (typeof parsed?.content === "string") {
+			result.content = parsed.content;
+		}
+		return result.description || result.content ? result : null;
 	} catch {
 		return null;
 	}
@@ -34,6 +35,8 @@ function extractJsonObject(text: string): GenerateContentResult | null {
 
 async function generateWithOpenRouter(input: {
 	type: ContentType;
+	target: GenerateTarget;
+	tone: GenerateTone;
 	topic: string;
 	extra?: string;
 }): Promise<GenerateContentResult> {
@@ -45,10 +48,21 @@ async function generateWithOpenRouter(input: {
 	const model =
 		process.env.OPENROUTER_MODEL || "meta-llama/llama-3.1-8b-instruct:free";
 	const style = input.type === "news" ? "berita resmi yayasan" : "laporan kegiatan sekolah";
+	const toneMap: Record<GenerateTone, string> = {
+		FORMAL: "formal dan profesional",
+		PROMOTIONAL: "promosional yang menarik namun tetap sopan",
+		NARRATIVE: "naratif bercerita yang hangat",
+	};
+	const formatByTarget: Record<GenerateTarget, string> = {
+		description: '{"description":"..."}',
+		content: '{"content":"..."}',
+		both: '{"description":"...","content":"..."}',
+	};
 	const prompt = [
 		"Kamu adalah penulis konten website sekolah dalam Bahasa Indonesia.",
 		`Buatkan ${style} berbentuk JSON valid TANPA markdown code fence.`,
-		'Format wajib: {"title":"...","description":"...","content":"..."}',
+		`Gaya bahasa: ${toneMap[input.tone]}.`,
+		`Format wajib: ${formatByTarget[input.target]}`,
 		"content harus HTML sederhana (p, h2, h3, ul, li, strong).",
 		"description maksimal 220 karakter.",
 		`Topik utama: ${input.topic}`,
@@ -95,9 +109,12 @@ async function generateWithOpenRouter(input: {
 	}
 
 	return {
-		title: parsed.title.trim(),
-		description: parsed.description.trim().slice(0, 220),
-		content: parsed.content.trim(),
+		description:
+			typeof parsed.description === "string"
+				? parsed.description.trim().slice(0, 220)
+				: undefined,
+		content:
+			typeof parsed.content === "string" ? parsed.content.trim() : undefined,
 	};
 }
 
@@ -117,9 +134,13 @@ export async function POST(request: NextRequest) {
 					? body.folder.trim()
 					: "yasrama";
 			const timestamp = Math.floor(Date.now() / 1000);
+			const allowedFormats = "jpg,jpeg,png,webp";
+			const transformation = "c_limit,w_1600,h_1600,f_auto,q_auto";
 			const signature = signCloudinaryParams({
 				timestamp,
 				folder,
+				allowed_formats: allowedFormats,
+				transformation,
 			});
 			const { cloudName, apiKey } = getCloudinaryConfig();
 
@@ -131,6 +152,8 @@ export async function POST(request: NextRequest) {
 						apiKey,
 						timestamp,
 						folder,
+						allowedFormats,
+						transformation,
 						signature,
 					},
 				},
@@ -140,6 +163,8 @@ export async function POST(request: NextRequest) {
 
 		if (action === "generate_content") {
 			const type = body?.type as ContentType;
+			const target = body?.target as GenerateTarget;
+			const tone = body?.tone as GenerateTone;
 			const topic = typeof body?.topic === "string" ? body.topic.trim() : "";
 			const extra = typeof body?.extra === "string" ? body.extra.trim() : "";
 
@@ -155,8 +180,34 @@ export async function POST(request: NextRequest) {
 					{ status: 400 },
 				);
 			}
+			if (
+				target !== "description" &&
+				target !== "content" &&
+				target !== "both"
+			) {
+				return NextResponse.json(
+					{ error: "Target generate tidak valid" },
+					{ status: 400 },
+				);
+			}
+			if (
+				tone !== "FORMAL" &&
+				tone !== "PROMOTIONAL" &&
+				tone !== "NARRATIVE"
+			) {
+				return NextResponse.json(
+					{ error: "Tone generate tidak valid" },
+					{ status: 400 },
+				);
+			}
 
-			const content = await generateWithOpenRouter({ type, topic, extra });
+			const content = await generateWithOpenRouter({
+				type,
+				target,
+				tone,
+				topic,
+				extra,
+			});
 			return NextResponse.json({ success: true, data: content }, { status: 200 });
 		}
 
@@ -169,4 +220,3 @@ export async function POST(request: NextRequest) {
 		);
 	}
 }
-

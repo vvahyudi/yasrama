@@ -1,18 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Sparkles, UploadCloud, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { ActivityType } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Textarea } from "@/components/ui/textarea";
 
-type ActivityType = "ACADEMIC" | "EXTRACURRICULAR" | "COMMUNITY" | "OTHER";
 type Institution = "" | "PAUD" | "SD";
+type GenerateTone = "FORMAL" | "PROMOTIONAL" | "NARRATIVE";
+type GenerateTarget = "description" | "content" | "both";
 
 interface ActivityFormState {
 	title: string;
@@ -41,6 +44,13 @@ function hasContent(value: string): boolean {
 	return textOnly.length > 0;
 }
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const toneOptions: Array<{ value: GenerateTone; label: string }> = [
+	{ value: "FORMAL", label: "Formal" },
+	{ value: "PROMOTIONAL", label: "Promosional" },
+	{ value: "NARRATIVE", label: "Naratif" },
+];
+
 const typeOptions: Array<{ value: ActivityType; label: string }> = [
 	{ value: "ACADEMIC", label: "Akademik" },
 	{ value: "EXTRACURRICULAR", label: "Ekstrakurikuler" },
@@ -50,10 +60,8 @@ const typeOptions: Array<{ value: ActivityType; label: string }> = [
 
 export function ActivityCreateForm() {
 	const router = useRouter();
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isUploadingImage, setIsUploadingImage] = useState(false);
-	const [isGenerating, setIsGenerating] = useState(false);
 	const [aiTopic, setAiTopic] = useState("");
+	const [aiTone, setAiTone] = useState<GenerateTone>("FORMAL");
 	const [form, setForm] = useState<ActivityFormState>({
 		title: "",
 		description: "",
@@ -77,15 +85,13 @@ export function ActivityCreateForm() {
 		setForm((prev) => ({ ...prev, [key]: value }));
 	}
 
-	async function handleGenerateContent() {
-		const topic = aiTopic.trim() || form.title.trim();
-		if (!topic) {
-			toast.error("Isi topik dulu untuk generate konten.");
-			return;
-		}
+	const generateMutation = useMutation({
+		mutationFn: async (target: GenerateTarget) => {
+			const topic = aiTopic.trim() || form.title.trim();
+			if (!topic) {
+				throw new Error("Isi topik dulu untuk generate konten.");
+			}
 
-		setIsGenerating(true);
-		try {
 			const response = await fetch("/api/admin", {
 				method: "POST",
 				headers: {
@@ -94,40 +100,37 @@ export function ActivityCreateForm() {
 				body: JSON.stringify({
 					action: "generate_content",
 					type: "activity",
+					target,
+					tone: aiTone,
 					topic,
-					extra: `${form.type} ${form.institution}`.trim(),
+					extra: [
+						`Kategori: ${form.type}`,
+						form.institution ? `Institusi: ${form.institution}` : "",
+						form.description.trim()
+							? `Deskripsi saat ini: ${form.description.trim()}`
+							: "",
+					]
+						.filter(Boolean)
+						.join("\n"),
 				}),
 			});
 			const data = await response.json();
 			if (!response.ok) {
 				throw new Error(data.error || "Gagal generate konten");
 			}
+			return { data, target };
+		},
+	});
 
-			setForm((prev) => ({
-				...prev,
-				title: data.data.title || prev.title,
-				description: data.data.description || prev.description,
-				content: data.data.content || prev.content,
-			}));
-			toast.success("Draft kegiatan berhasil digenerate.");
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Terjadi kesalahan saat generate";
-			toast.error(message);
-		} finally {
-			setIsGenerating(false);
-		}
-	}
+	const uploadMutation = useMutation({
+		mutationFn: async (file: File) => {
+			if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+				throw new Error("Format gambar harus JPG, PNG, atau WEBP.");
+			}
+			if (file.size > 5 * 1024 * 1024) {
+				throw new Error("Ukuran gambar maksimal 5MB.");
+			}
 
-	async function handleImageUpload(file: File) {
-		if (!file) return;
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("Ukuran gambar maksimal 5MB.");
-			return;
-		}
-
-		setIsUploadingImage(true);
-		try {
 			const signResponse = await fetch("/api/admin", {
 				method: "POST",
 				headers: {
@@ -149,6 +152,8 @@ export function ActivityCreateForm() {
 			uploadBody.append("timestamp", String(signData.data.timestamp));
 			uploadBody.append("signature", signData.data.signature);
 			uploadBody.append("folder", signData.data.folder);
+			uploadBody.append("allowed_formats", signData.data.allowedFormats);
+			uploadBody.append("transformation", signData.data.transformation);
 
 			const uploadResponse = await fetch(
 				`https://api.cloudinary.com/v1_1/${signData.data.cloudName}/image/upload`,
@@ -161,27 +166,12 @@ export function ActivityCreateForm() {
 			if (!uploadResponse.ok) {
 				throw new Error(uploadData.error?.message || "Upload gambar gagal");
 			}
+			return uploadData.secure_url as string;
+		},
+	});
 
-			updateField("image", uploadData.secure_url);
-			toast.success("Gambar berhasil diupload.");
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Terjadi kesalahan saat upload";
-			toast.error(message);
-		} finally {
-			setIsUploadingImage(false);
-		}
-	}
-
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		if (!canSubmit || isSubmitting) {
-			return;
-		}
-
-		setIsSubmitting(true);
-
-		try {
+	const submitMutation = useMutation({
+		mutationFn: async () => {
 			const response = await fetch("/api/admin/activities", {
 				method: "POST",
 				headers: {
@@ -197,13 +187,67 @@ export function ActivityCreateForm() {
 					featured: form.featured,
 				}),
 			});
-
 			const data = await response.json();
-
 			if (!response.ok) {
 				throw new Error(data.error || "Gagal membuat kegiatan");
 			}
+		},
+	});
 
+	const isGenerating = generateMutation.isPending;
+	const isUploadingImage = uploadMutation.isPending;
+	const isSubmitting = submitMutation.isPending;
+
+	async function handleGenerateContent(target: GenerateTarget) {
+		const topic = aiTopic.trim() || form.title.trim();
+		if (!topic) {
+			toast.error("Isi topik dulu untuk generate konten.");
+			return;
+		}
+
+		try {
+			const { data } = await generateMutation.mutateAsync(target);
+
+			setForm((prev) => ({
+				...prev,
+				description: data.data.description || prev.description,
+				content: data.data.content || prev.content,
+			}));
+			if (target === "description") {
+				toast.success("Deskripsi kegiatan berhasil digenerate.");
+			} else if (target === "content") {
+				toast.success("Konten kegiatan berhasil digenerate.");
+			} else {
+				toast.success("Deskripsi dan konten kegiatan berhasil digenerate.");
+			}
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Terjadi kesalahan saat generate";
+			toast.error(message);
+		}
+	}
+
+	async function handleImageUpload(file: File) {
+		if (!file) return;
+		try {
+			const secureUrl = await uploadMutation.mutateAsync(file);
+			updateField("image", secureUrl);
+			toast.success("Gambar berhasil diupload.");
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Terjadi kesalahan saat upload";
+			toast.error(message);
+		}
+	}
+
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		if (!canSubmit || isSubmitting) {
+			return;
+		}
+
+		try {
+			await submitMutation.mutateAsync();
 			toast.success("Kegiatan berhasil dibuat.");
 			router.push("/admin/activities");
 			router.refresh();
@@ -211,8 +255,6 @@ export function ActivityCreateForm() {
 			const message =
 				error instanceof Error ? error.message : "Terjadi kesalahan server";
 			toast.error(message);
-		} finally {
-			setIsSubmitting(false);
 		}
 	}
 
@@ -250,19 +292,35 @@ export function ActivityCreateForm() {
 						</div>
 						<div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 p-3">
 							<p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-600">
-								AI Draft Generator
+								AI Generate Deskripsi & Konten
 							</p>
-							<div className="flex flex-col gap-2 sm:flex-row">
+							<div className="grid gap-2 md:grid-cols-[1fr_180px]">
 								<Input
 									placeholder="Topik kegiatan, contoh: Lomba Hari Santri"
 									value={aiTopic}
 									onChange={(event) => setAiTopic(event.target.value)}
 									disabled={isSubmitting || isGenerating}
 								/>
+								<select
+									className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none"
+									value={aiTone}
+									onChange={(event) =>
+										setAiTone(event.target.value as GenerateTone)
+									}
+									disabled={isSubmitting || isGenerating}
+								>
+									{toneOptions.map((tone) => (
+										<option key={tone.value} value={tone.value}>
+											Tone: {tone.label}
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="mt-2 grid gap-2 sm:grid-cols-3">
 								<Button
 									type="button"
 									variant="outline"
-									onClick={handleGenerateContent}
+									onClick={() => handleGenerateContent("description")}
 									disabled={isSubmitting || isGenerating}
 								>
 									{isGenerating ? (
@@ -273,9 +331,27 @@ export function ActivityCreateForm() {
 									) : (
 										<>
 											<WandSparkles className="mr-2 h-4 w-4" />
-											Generate
+											Deskripsi
 										</>
 									)}
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => handleGenerateContent("content")}
+									disabled={isSubmitting || isGenerating}
+								>
+									<WandSparkles className="mr-2 h-4 w-4" />
+									Konten
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => handleGenerateContent("both")}
+									disabled={isSubmitting || isGenerating}
+								>
+									<WandSparkles className="mr-2 h-4 w-4" />
+									Keduanya
 								</Button>
 							</div>
 						</div>
@@ -376,7 +452,7 @@ export function ActivityCreateForm() {
 								<input
 									id="activity-image-upload"
 									type="file"
-									accept="image/*"
+									accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
 									className="hidden"
 									disabled={isSubmitting || isUploadingImage}
 									onChange={(event) => {

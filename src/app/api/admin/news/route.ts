@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+
+import { NEWS_STATUS, type NewsStatus } from "@/lib/content-types";
 import { prisma } from "@/lib/db";
 import { getUser } from "@/lib/session";
 
@@ -20,8 +22,11 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 		const { searchParams } = new URL(request.url);
-		const status = searchParams.get("status");
-		const page = parseInt(searchParams.get("page") || "1");
+		const rawStatus = searchParams.get("status");
+		const status = NEWS_STATUS.includes(rawStatus as NewsStatus)
+			? (rawStatus as NewsStatus)
+			: undefined;
+		const page = parseInt(searchParams.get("page") || "1", 10);
 		const limit = 10;
 
 		const where = status ? { status } : {};

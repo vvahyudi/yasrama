@@ -2,22 +2,10 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import type { NewsSummary } from "@/lib/content-types";
 import { prisma } from "@/lib/db";
 
-type NewsListItem = {
-	id: string;
-	slug: string;
-	title: string;
-	description: string;
-	image: string | null;
-	featured: boolean;
-	createdAt: Date;
-	author: {
-		name: string | null;
-	};
-};
-
-async function getLatestNews(): Promise<NewsListItem[]> {
+async function getLatestNews(): Promise<NewsSummary[]> {
 	try {
 		const news = await prisma.news.findMany({
 			where: { status: "PUBLISHED" },
@@ -29,7 +17,18 @@ async function getLatestNews(): Promise<NewsListItem[]> {
 				},
 			},
 		});
-		return news;
+
+		return news.map((item) => ({
+			id: item.id,
+			slug: item.slug,
+			title: item.title,
+			description: item.description,
+			image: item.image,
+			featured: item.featured,
+			status: item.status,
+			createdAt: item.createdAt.toISOString(),
+			authorName: item.author.name,
+		}));
 	} catch (error) {
 		console.error("Error fetching news:", error);
 		return [];
@@ -56,7 +55,7 @@ export default async function NewsPage() {
 				</div>
 			) : (
 				<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-					{newsList.map((news: NewsListItem) => (
+					{newsList.map((news) => (
 						<Link
 							key={news.id}
 							href={`/berita/${news.slug}`}
@@ -96,7 +95,7 @@ export default async function NewsPage() {
 										</span>
 										<span className="flex items-center gap-1">
 											<User className="size-3" />
-											{news.author.name}
+											{news.authorName || "Admin"}
 										</span>
 									</div>
 									<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />

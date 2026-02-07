@@ -20,7 +20,7 @@ import {
 	Undo2,
 	Unlink2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
 	const [isFocused, setIsFocused] = useState(false);
 	const [isEmpty, setIsEmpty] = useState(() => value.trim().length === 0);
+	const isSyncingExternalValue = useRef(false);
 
 	const editor = useEditor({
 		extensions: [
@@ -57,6 +58,9 @@ export function RichTextEditor({
 		editable: !disabled,
 		immediatelyRender: false,
 		onUpdate({ editor: tiptap }) {
+			if (isSyncingExternalValue.current) {
+				return;
+			}
 			setIsEmpty(tiptap.isEmpty);
 			onChange(tiptap.getHTML());
 		},
@@ -67,6 +71,26 @@ export function RichTextEditor({
 			setIsFocused(false);
 		},
 	});
+
+	useEffect(() => {
+		if (!editor) return;
+
+		const nextValue = value || "";
+		const currentValue = editor.getHTML();
+		if (currentValue === nextValue) {
+			return;
+		}
+
+		isSyncingExternalValue.current = true;
+		editor.commands.setContent(nextValue);
+		setIsEmpty(editor.isEmpty);
+		isSyncingExternalValue.current = false;
+	}, [editor, value]);
+
+	useEffect(() => {
+		if (!editor) return;
+		editor.setEditable(!disabled);
+	}, [editor, disabled]);
 
 	if (!editor) {
 		return null;

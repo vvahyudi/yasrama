@@ -8,7 +8,11 @@ const pool = new Pool({
 
 const adapter = new PrismaPg(pool);
 
-const globalForPrisma = global as any;
+type GlobalPrisma = typeof globalThis & {
+	prisma?: PrismaClient;
+};
+
+const globalForPrisma = globalThis as GlobalPrisma;
 
 export const prisma =
 	globalForPrisma.prisma ??

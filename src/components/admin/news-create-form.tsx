@@ -1,17 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Sparkles, UploadCloud, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { NewsStatus } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Textarea } from "@/components/ui/textarea";
 
-type NewsStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+type GenerateTone = "FORMAL" | "PROMOTIONAL" | "NARRATIVE";
+type GenerateTarget = "description" | "content" | "both";
 
 interface NewsFormState {
 	title: string;
@@ -39,6 +42,13 @@ function hasContent(value: string): boolean {
 	return textOnly.length > 0;
 }
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const toneOptions: Array<{ value: GenerateTone; label: string }> = [
+	{ value: "FORMAL", label: "Formal" },
+	{ value: "PROMOTIONAL", label: "Promosional" },
+	{ value: "NARRATIVE", label: "Naratif" },
+];
+
 const statusOptions: Array<{ value: NewsStatus; label: string; hint: string }> = [
 	{
 		value: "DRAFT",
@@ -59,10 +69,8 @@ const statusOptions: Array<{ value: NewsStatus; label: string; hint: string }> =
 
 export function NewsCreateForm() {
 	const router = useRouter();
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isUploadingImage, setIsUploadingImage] = useState(false);
-	const [isGenerating, setIsGenerating] = useState(false);
 	const [aiTopic, setAiTopic] = useState("");
+	const [aiTone, setAiTone] = useState<GenerateTone>("FORMAL");
 	const [form, setForm] = useState<NewsFormState>({
 		title: "",
 		description: "",
@@ -85,15 +93,13 @@ export function NewsCreateForm() {
 		setForm((prev) => ({ ...prev, [key]: value }));
 	}
 
-	async function handleGenerateContent() {
-		const topic = aiTopic.trim() || form.title.trim();
-		if (!topic) {
-			toast.error("Isi topik dulu untuk generate konten.");
-			return;
-		}
+	const generateMutation = useMutation({
+		mutationFn: async (target: GenerateTarget) => {
+			const topic = aiTopic.trim() || form.title.trim();
+			if (!topic) {
+				throw new Error("Isi topik dulu untuk generate konten.");
+			}
 
-		setIsGenerating(true);
-		try {
 			const response = await fetch("/api/admin", {
 				method: "POST",
 				headers: {
@@ -102,8 +108,17 @@ export function NewsCreateForm() {
 				body: JSON.stringify({
 					action: "generate_content",
 					type: "news",
+					target,
+					tone: aiTone,
 					topic,
-					extra: form.description.trim(),
+					extra: [
+						form.description.trim()
+							? `Deskripsi saat ini: ${form.description.trim()}`
+							: "",
+						hasContent(form.content) ? "Konten saat ini sudah ada." : "",
+					]
+						.filter(Boolean)
+						.join("\n"),
 				}),
 			});
 			const data = await response.json();
@@ -111,31 +126,19 @@ export function NewsCreateForm() {
 				throw new Error(data.error || "Gagal generate konten");
 			}
 
-			setForm((prev) => ({
-				...prev,
-				title: data.data.title || prev.title,
-				description: data.data.description || prev.description,
-				content: data.data.content || prev.content,
-			}));
-			toast.success("Draft berita berhasil digenerate.");
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Terjadi kesalahan saat generate";
-			toast.error(message);
-		} finally {
-			setIsGenerating(false);
-		}
-	}
+			return { data, target };
+		},
+	});
 
-	async function handleImageUpload(file: File) {
-		if (!file) return;
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("Ukuran gambar maksimal 5MB.");
-			return;
-		}
+	const uploadMutation = useMutation({
+		mutationFn: async (file: File) => {
+			if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+				throw new Error("Format gambar harus JPG, PNG, atau WEBP.");
+			}
+			if (file.size > 5 * 1024 * 1024) {
+				throw new Error("Ukuran gambar maksimal 5MB.");
+			}
 
-		setIsUploadingImage(true);
-		try {
 			const signResponse = await fetch("/api/admin", {
 				method: "POST",
 				headers: {
@@ -157,6 +160,8 @@ export function NewsCreateForm() {
 			uploadBody.append("timestamp", String(signData.data.timestamp));
 			uploadBody.append("signature", signData.data.signature);
 			uploadBody.append("folder", signData.data.folder);
+			uploadBody.append("allowed_formats", signData.data.allowedFormats);
+			uploadBody.append("transformation", signData.data.transformation);
 
 			const uploadResponse = await fetch(
 				`https://api.cloudinary.com/v1_1/${signData.data.cloudName}/image/upload`,
@@ -170,26 +175,12 @@ export function NewsCreateForm() {
 				throw new Error(uploadData.error?.message || "Upload gambar gagal");
 			}
 
-			updateField("image", uploadData.secure_url);
-			toast.success("Gambar berhasil diupload.");
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Terjadi kesalahan saat upload";
-			toast.error(message);
-		} finally {
-			setIsUploadingImage(false);
-		}
-	}
+			return uploadData.secure_url as string;
+		},
+	});
 
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		if (!canSubmit || isSubmitting) {
-			return;
-		}
-
-		setIsSubmitting(true);
-
-		try {
+	const submitMutation = useMutation({
+		mutationFn: async () => {
 			const response = await fetch("/api/admin/news", {
 				method: "POST",
 				headers: {
@@ -204,13 +195,67 @@ export function NewsCreateForm() {
 					featured: form.featured,
 				}),
 			});
-
 			const data = await response.json();
-
 			if (!response.ok) {
 				throw new Error(data.error || "Gagal membuat berita");
 			}
+		},
+	});
 
+	const isGenerating = generateMutation.isPending;
+	const isUploadingImage = uploadMutation.isPending;
+	const isSubmitting = submitMutation.isPending;
+
+	async function handleGenerateContent(target: GenerateTarget) {
+		const topic = aiTopic.trim() || form.title.trim();
+		if (!topic) {
+			toast.error("Isi topik dulu untuk generate konten.");
+			return;
+		}
+
+		try {
+			const { data } = await generateMutation.mutateAsync(target);
+
+			setForm((prev) => ({
+				...prev,
+				description: data.data.description || prev.description,
+				content: data.data.content || prev.content,
+			}));
+			if (target === "description") {
+				toast.success("Deskripsi berita berhasil digenerate.");
+			} else if (target === "content") {
+				toast.success("Konten berita berhasil digenerate.");
+			} else {
+				toast.success("Deskripsi dan konten berita berhasil digenerate.");
+			}
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Terjadi kesalahan saat generate";
+			toast.error(message);
+		}
+	}
+
+	async function handleImageUpload(file: File) {
+		if (!file) return;
+		try {
+			const secureUrl = await uploadMutation.mutateAsync(file);
+			updateField("image", secureUrl);
+			toast.success("Gambar berhasil diupload.");
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Terjadi kesalahan saat upload";
+			toast.error(message);
+		}
+	}
+
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		if (!canSubmit || isSubmitting) {
+			return;
+		}
+
+		try {
+			await submitMutation.mutateAsync();
 			toast.success("Berita berhasil dibuat.");
 			router.push("/admin/news");
 			router.refresh();
@@ -218,8 +263,6 @@ export function NewsCreateForm() {
 			const message =
 				error instanceof Error ? error.message : "Terjadi kesalahan server";
 			toast.error(message);
-		} finally {
-			setIsSubmitting(false);
 		}
 	}
 
@@ -262,19 +305,35 @@ export function NewsCreateForm() {
 						</div>
 						<div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 p-3">
 							<p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-600">
-								AI Draft Generator
+								AI Generate Deskripsi & Konten
 							</p>
-							<div className="flex flex-col gap-2 sm:flex-row">
+							<div className="grid gap-2 md:grid-cols-[1fr_180px]">
 								<Input
 									placeholder="Topik berita, contoh: Wisuda Tahfidz 2026"
 									value={aiTopic}
 									onChange={(event) => setAiTopic(event.target.value)}
 									disabled={isSubmitting || isGenerating}
 								/>
+								<select
+									className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none"
+									value={aiTone}
+									onChange={(event) =>
+										setAiTone(event.target.value as GenerateTone)
+									}
+									disabled={isSubmitting || isGenerating}
+								>
+									{toneOptions.map((tone) => (
+										<option key={tone.value} value={tone.value}>
+											Tone: {tone.label}
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="mt-2 grid gap-2 sm:grid-cols-3">
 								<Button
 									type="button"
 									variant="outline"
-									onClick={handleGenerateContent}
+									onClick={() => handleGenerateContent("description")}
 									disabled={isSubmitting || isGenerating}
 								>
 									{isGenerating ? (
@@ -285,9 +344,27 @@ export function NewsCreateForm() {
 									) : (
 										<>
 											<WandSparkles className="mr-2 h-4 w-4" />
-											Generate
+											Deskripsi
 										</>
 									)}
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => handleGenerateContent("content")}
+									disabled={isSubmitting || isGenerating}
+								>
+									<WandSparkles className="mr-2 h-4 w-4" />
+									Konten
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => handleGenerateContent("both")}
+									disabled={isSubmitting || isGenerating}
+								>
+									<WandSparkles className="mr-2 h-4 w-4" />
+									Keduanya
 								</Button>
 							</div>
 						</div>
@@ -348,7 +425,7 @@ export function NewsCreateForm() {
 									<input
 										id="news-image-upload"
 										type="file"
-										accept="image/*"
+										accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
 										className="hidden"
 										disabled={isSubmitting || isUploadingImage}
 										onChange={(event) => {

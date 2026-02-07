@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { clearAuthCookie } from "@/lib/auth";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
 	try {
 		await clearAuthCookie();
 

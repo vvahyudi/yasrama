@@ -1,4 +1,4 @@
-/** biome-ignore-all assist/source/organizeImports: <explanation> */
+/** biome-ignore-all assist/source/organizeImports: <berisik> */
 "use client";
 
 import { motion } from "motion/react";

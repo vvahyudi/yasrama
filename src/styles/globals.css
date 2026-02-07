@@ -163,3 +163,46 @@
 		@apply border-border outline-ring/50;
 	}
 }
+
+@layer components {
+	.tiptap-editor .ProseMirror {
+		min-height: 250px;
+		outline: none;
+	}
+
+	.tiptap-editor .ProseMirror p {
+		@apply mb-3 leading-7;
+	}
+
+	.tiptap-editor .ProseMirror h2 {
+		@apply mt-6 mb-3 text-2xl font-bold;
+	}
+
+	.tiptap-editor .ProseMirror h3 {
+		@apply mt-5 mb-3 text-xl font-semibold;
+	}
+
+	.tiptap-editor .ProseMirror ul {
+		@apply mb-3 list-disc pl-6;
+	}
+
+	.tiptap-editor .ProseMirror ol {
+		@apply mb-3 list-decimal pl-6;
+	}
+
+	.tiptap-editor .ProseMirror blockquote {
+		@apply my-4 border-l-4 border-primary/40 pl-4 italic text-muted-foreground;
+	}
+
+	.tiptap-editor .ProseMirror pre {
+		@apply my-4 overflow-x-auto rounded-md bg-slate-900 p-3 text-slate-100;
+	}
+
+	.tiptap-editor .ProseMirror a {
+		@apply text-primary underline;
+	}
+
+	.tiptap-editor .ProseMirror img {
+		@apply my-4 max-h-80 w-auto rounded-md border;
+	}
+}

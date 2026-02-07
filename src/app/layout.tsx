@@ -1,9 +1,7 @@
-import "../styles/globals.css"
-import { noto, notoArabic } from "@/lib/fonts"
-import Header from "@/components/layout/header"
-import Footer from "@/components/layout/footer"
-import { Toaster } from "@/components/ui/sonner"
-import type { Metadata } from "next"
+import "../styles/globals.css";
+import { noto, notoArabic } from "@/lib/fonts";
+import { Toaster } from "@/components/ui/sonner";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
 	title: {
@@ -41,10 +39,10 @@ export const metadata: Metadata = {
 			},
 		],
 	},
-}
+};
 
 interface RootLayoutProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -55,11 +53,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
 			suppressHydrationWarning
 		>
 			<body className={noto.className}>
-				<Header />
-				<main className="min-h-screen pt-20">{children}</main>
-				<Footer />
+				{children}
 				<Toaster />
 			</body>
 		</html>
-	)
+	);
 }

@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import dynamic from "next/dynamic"
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-import { Button } from "@/components/ui/button"
-const MobileMenu = dynamic(() => import("./mobile-menu"), { ssr: false })
-const MainNav = dynamic(() => import("./main-nav"), { ssr: false })
+import { Button } from "@/components/ui/button";
+const MobileMenu = dynamic(() => import("./mobile-menu"), { ssr: false });
+const MainNav = dynamic(() => import("./main-nav"), { ssr: false });
 
 export default function Header() {
-	const [isScrolled, setIsScrolled] = useState(false)
+	const [isScrolled, setIsScrolled] = useState(false);
 
 	useEffect(() => {
 		const handleScroll = () => {
-			setIsScrolled(window.scrollY > 50)
-		}
-		window.addEventListener("scroll", handleScroll)
-		return () => window.removeEventListener("scroll", handleScroll)
-	}, [])
+			setIsScrolled(window.scrollY > 50);
+		};
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
 	return (
 		<header
@@ -56,6 +56,7 @@ export default function Header() {
 									height={96}
 									className="h-12 w-auto object-contain"
 									priority
+									loading="eager"
 								/>
 							</div>
 						</Link>
@@ -67,7 +68,7 @@ export default function Header() {
 					</div>
 
 					{/* Right: Mobile Nav / Call to Action */}
-					<div className="flex justify-end md:hidden ml-48">
+					<div className="flex justify-end md:hidden">
 						<MobileMenu />
 					</div>
 
@@ -80,5 +81,5 @@ export default function Header() {
 				</div>
 			</div>
 		</header>
-	)
+	);
 }

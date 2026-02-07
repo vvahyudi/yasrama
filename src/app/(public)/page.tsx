@@ -1,16 +1,17 @@
-import type { Metadata } from "next"
-import HeroSection from "@/components/sections/hero-section"
-import AboutSection from "@/components/sections/about-section"
-import InstitutionsSection from "@/components/sections/institutions-section"
-import ActivitiesSection from "@/components/sections/activities-section"
-import ContactSection from "@/components/sections/contact-section"
-import ScrollToTopButton from "@/components/ui/scroll-to-top"
+import type { Metadata } from "next";
+import HeroSection from "@/components/sections/hero-section";
+import AboutSection from "@/components/sections/about-section";
+import InstitutionsSection from "@/components/sections/institutions-section";
+import ActivitiesSection from "@/components/sections/activities-section";
+import { NewsSection } from "@/components/sections/news-section";
+import ContactSection from "@/components/sections/contact-section";
+import ScrollToTopButton from "@/components/ui/scroll-to-top";
 
 export const metadata: Metadata = {
 	title: "Beranda | Yayasan Raden Rahmat",
 	description:
 		"Yayasan Raden Rahmat - Lembaga pendidikan Islam yang mengintegrasikan nilai-nilai Ahlussunnah wal Jama'ah An-Nahdliyah dengan kurikulum modern.",
-}
+};
 
 export default function HomePage() {
 	return (
@@ -21,9 +22,10 @@ export default function HomePage() {
 			/>
 			<AboutSection />
 			<InstitutionsSection />
+			<NewsSection />
 			<ActivitiesSection />
 			<ContactSection />
 			<ScrollToTopButton />
 		</>
-	)
+	);
 }

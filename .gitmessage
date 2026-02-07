@@ -1,0 +1,27 @@
+# Git commit conventions
+# Type: Description
+# 
+# Types:
+# feat: New feature
+# fix: Bug fix
+# docs: Documentation changes
+# style: Code style changes (formatting, etc)
+# refactor: Code refactoring
+# perf: Performance improvements
+# test: Adding or updating tests
+# chore: Build process or auxiliary tool changes
+
+# Example commits:
+# feat: add contact form component
+# fix: resolve mobile menu alignment issue
+# docs: update README with installation guide
+# style: format code with prettier
+# refactor: extract hero section into component
+# perf: optimize image loading
+# test: add unit tests for button component
+# chore: update dependencies
+
+# Keep the subject line under 50 characters
+# Use imperative mood ("add" not "added")
+# Separate subject from body with blank line
+# Use body to explain what and why vs. how

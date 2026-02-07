@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { useRef, useEffect } from "react"
-import Image from "next/image"
-import { fontVariants } from "@/lib/fonts"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { motion } from "motion/react"
+import { useRef, useEffect } from "react";
+import Image from "next/image";
+import { fontVariants } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export default function HeroSection({
 	title = "Yayasan Raden Rahmat",
 	description = "Lembaga pendidikan Islam yang mengintegrasikan nilai-nilai Ahlussunnah wal Jama'ah An-Nahdliyah",
 }) {
-	const heroRef = useRef(null)
+	const heroRef = useRef(null);
 
 	// Simple parallax effect on scroll
 	useEffect(() => {
 		const handleScroll = () => {
-			if (!heroRef.current) return
-			const scrollY = window.scrollY
-			const element = heroRef.current as HTMLDivElement
-			element.style.transform = `translateY(${scrollY * 0.3}px)`
-		}
+			if (!heroRef.current) return;
+			const scrollY = window.scrollY;
+			const element = heroRef.current as HTMLDivElement;
+			element.style.transform = `translateY(${scrollY * 0.3}px)`;
+		};
 
-		window.addEventListener("scroll", handleScroll)
-		return () => window.removeEventListener("scroll", handleScroll)
-	}, [])
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
 	return (
 		<section
@@ -42,7 +42,10 @@ export default function HeroSection({
 					priority
 					className="object-cover"
 					sizes="100vw"
+					placeholder="blur"
+					blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
 				/>
+
 				<div className="absolute inset-0 bg-black/60 hero-bg-gradient" />
 			</div>
 
@@ -98,5 +101,5 @@ export default function HeroSection({
 				</motion.div>
 			</div>
 		</section>
-	)
+	);
 }

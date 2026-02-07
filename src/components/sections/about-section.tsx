@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useRef } from "react"
-import Image from "next/image"
-import { fontVariants } from "@/lib/fonts"
-import { cn } from "@/lib/utils"
-import { Check } from "lucide-react"
-import { motion, useInView } from "motion/react"
+import { useRef } from "react";
+import Image from "next/image";
+import { fontVariants } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import { motion, useInView } from "motion/react";
 
 // Data for features/benefits
 const features = [
@@ -15,11 +15,11 @@ const features = [
 	"Pelatihan minat dan bakat siswa.",
 	"SDM yang berkualitas",
 	"Lembaga kesejahteraan sosial",
-]
+];
 
 export default function AboutSection() {
-	const sectionRef = useRef(null)
-	const isInView = useInView(sectionRef, { once: true, margin: "-100px" })
+	const sectionRef = useRef(null);
+	const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
 	const containerVariants = {
 		hidden: { opacity: 0 },
@@ -30,7 +30,7 @@ export default function AboutSection() {
 				delayChildren: 0.2,
 			},
 		},
-	}
+	};
 
 	const itemVariants = {
 		hidden: { opacity: 0, y: 20 },
@@ -39,7 +39,7 @@ export default function AboutSection() {
 			y: 0,
 			transition: { duration: 0.5 },
 		},
-	}
+	};
 
 	return (
 		<section
@@ -66,6 +66,8 @@ export default function AboutSection() {
 							priority
 							className="object-cover hover:scale-105 transition-transform duration-700"
 							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+							placeholder="blur"
+							blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
 						/>
 					</motion.div>
 
@@ -112,5 +114,5 @@ export default function AboutSection() {
 				</motion.div>
 			</div>
 		</section>
-	)
+	);
 }

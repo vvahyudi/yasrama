@@ -1,5 +1,5 @@
+/** biome-ignore-all assist/source/organizeImports: <berisik> */
 "use client";
-
 import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";

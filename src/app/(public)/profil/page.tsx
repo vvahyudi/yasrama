@@ -1,15 +1,16 @@
-"use client"
+/** biome-ignore-all assist/source/organizeImports: <explanation> */
+"use client";
 
-import { motion } from "motion/react"
-import { cn } from "@/lib/utils"
-import { fontVariants } from "@/lib/fonts"
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
+import { fontVariants } from "@/lib/fonts";
 import {
 	BookOpen,
 	HeartHandshake,
 	University as Mosque,
 	MapPin,
 	ChevronRight,
-} from "lucide-react"
+} from "lucide-react";
 
 const ProfilPage = () => {
 	const containerVariants = {
@@ -21,7 +22,7 @@ const ProfilPage = () => {
 				delayChildren: 0.2,
 			},
 		},
-	}
+	};
 
 	const itemVariants = {
 		hidden: { opacity: 0, y: 20 },
@@ -30,7 +31,7 @@ const ProfilPage = () => {
 			y: 0,
 			transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
 		},
-	}
+	};
 
 	const cardVariants = {
 		hidden: { opacity: 0, scale: 0.95 },
@@ -39,7 +40,7 @@ const ProfilPage = () => {
 			scale: 1,
 			transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
 		},
-	}
+	};
 
 	const sections = [
 		{
@@ -112,7 +113,7 @@ const ProfilPage = () => {
 				</ul>
 			),
 		},
-	]
+	];
 
 	return (
 		<div className="bg-gradient-to-b from-white to-gray-50 min-h-screen">
@@ -204,9 +205,9 @@ const ProfilPage = () => {
 
 					{/* Bento Grid */}
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-						{sections.slice(1).map((section, index) => (
+						{sections.slice(1).map((section) => (
 							<motion.div
-								key={index}
+								key={section.title}
 								variants={cardVariants}
 								className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300"
 								whileHover={{ y: -8, transition: { duration: 0.3 } }}
@@ -265,7 +266,7 @@ const ProfilPage = () => {
 				</div>
 			</motion.section>
 		</div>
-	)
-}
+	);
+};
 
-export default ProfilPage
+export default ProfilPage;
